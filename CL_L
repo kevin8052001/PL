@@ -1,0 +1,41 @@
+#!/Perl64/bin/perl
+
+#各種CL有的location
+
+use Encode;
+
+my $data = "deal" ;
+my @area ;
+my %data ;
+while(glob "$data/*"){
+	$_=~/$data\/(.*)/g;
+	push @area, $1;
+}
+
+for( my $i = 0 ; $i <= $#area ; $i++ ) {
+  print $area[$i]."\n" ;
+  while(glob "$data/$area[$i]/*.txt"){
+			
+	open (FF,$_);
+	#$_=~/$data\/$area[$i]\/(.*?)\.txt/g;
+	while($temp=<FF>){
+	  chomp $temp ;
+	  $temp =~/(.*?)=======>(.*?==>.*)/ ;
+      if( exists $data{$2} ) {
+	    $data{$2} = $data{$2} + 1 ;
+	  }
+	  
+	  else {
+	    $data{$2} = 1 ;
+	  }	  
+	}
+	
+    close FF;		
+  }  
+}
+
+open(FHD,">>total2.txt") || die "$!\n";
+foreach $keys ( sort {$data{$a} <=> $data{$b} }  keys %data ) {
+  print FHD $keys."-------".$data{$keys}."\n";
+}
+close FHD;
