@@ -19,11 +19,11 @@ my @name ;
 my @TFIDF ;
 my %ans ;
 my @freq ;
-$username = 'root';
-$password = 'a0936989788';
-$database = 'db';
-$hostname = 'localhost';
-$port= '3306';
+$username = 'xxxxxx';
+$password = 'xxxxxxxx';
+$database = 'xxxxxxxx';
+$hostname = 'xxxxxxxxx';
+$port= 'xxxxxxxxxxxx';
 $dbh = DBI->connect( "dbi:mysql:database=$database;"."host=$hostname;port=$port",$username, $password )|| die print"Could not connect to database: $DBI::errstr";
 
 my $weight = $#querydata + 2 ;
