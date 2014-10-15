@@ -1,0 +1,929 @@
+# include <stdio.h>
+# include <stdlib.h>
+# include <iostream>
+# include <string.h>
+
+
+using namespace std ;
+
+typedef char Str100[ 1000 ] ;
+
+
+struct Data {    
+       
+  Str100 string ; 
+  int value ;           
+} ;// Data()
+
+typedef Data Information ;
+
+Information gtable[ 1000 ] ;
+
+Str100 gtemp ;
+char gch = '\0' ;
+int gTestNum ; // 提號 
+int gTableTotal ; // 共有幾個table 
+int gidenttype ;
+bool gN_GT ;
+
+void GetToken() ;
+int WhatType() ;
+bool CheckToken( char ch ) ;
+bool CheckNumToken( char ch ) ;
+bool IdentToken( char ch ) ;
+void Ident() ;
+void Number() ;
+void Symbol() ;
+bool FindIdent( int &answer, Str100 &temp2, int &where ) ;
+bool Factor( int &answer ) ;
+bool Term( int &answer ) ;
+bool ArithExp( int &answer ) ;
+bool BooleanOperator( int &type ) ;
+bool NOT_ID_StartFactor( int &answer ) ;
+bool NOT_ID_StartTerm( int &answer ) ;
+bool NOT_ID_StartArithExp( int &answer ) ;
+bool NOT_ID_StartArithExpOrBexp( int &answer ) ;
+bool IDlessArithExpOrBexp( int &answer ) ;
+bool Command( int &answer ) ;
+int main() {
+  int answer = 0 ; 
+  gidenttype = 0 ; 
+  scanf( "%d", &gTestNum ) ; 
+  gN_GT = true ; 
+  GetToken() ;
+  cout << "Program starts..." << "\n" ;
+  while ( strcmp( gtemp, "quit" ) != 0 ) {
+    if ( Command( answer ) == true ) {
+      if ( answer == -666 )
+        cout << "> true" << "\n" ; 
+      else if ( answer == -888 )
+        cout << "> false" << "\n" ; 
+      else if ( answer == 9527 )
+        ;  
+      else           
+        cout << "> " << answer << "\n" ;
+    } // if()  
+    else {     
+      if ( IdentToken( gtemp[0] ) ) {
+        if ( gidenttype == 1 ) cout << "> Undefined identifier : '" << gtemp << "'" << "\n" ;     
+        else if ( gidenttype == 2 ) cout << "> Unexpected token : '" << gtemp << "'" << "\n" ;  
+      } // if()          
+
+      else if ( strcmp( gtemp, "*" ) == 0 || strcmp( gtemp, "/" ) == 0 || strcmp( gtemp, "+" ) == 0 || 
+                strcmp( gtemp, "-" ) == 0 || strcmp( gtemp, "(" ) == 0 || strcmp( gtemp, ")" ) == 0 || 
+                strcmp( gtemp, "=" ) == 0 || strcmp( gtemp, "<" ) == 0 || strcmp( gtemp, ">" ) == 0 ||
+                strcmp( gtemp, ">=" ) == 0 || strcmp( gtemp, "<=" ) == 0 || strcmp( gtemp, "<>" ) == 0 || 
+                strcmp( gtemp, ":=" ) == 0 ) {
+                        
+        cout << "> Unexpected token : '" << gtemp << "'" << "\n" ;                    
+      } // else if()
+      
+      else 
+        cout << "> Unrecognized token with first char : '" << gtemp << "'" << "\n" ;
+                           
+      while ( gch != '\n' ) {
+        scanf( "%c", &gch ) ;    
+      } // while ()    
+    } // else
+     
+    gidenttype = 0 ; 
+    answer = 0 ;
+    gN_GT = true ;  
+    GetToken() ;  
+  } // while()
+  
+  cout << "> Program exits..." ;
+  system( "pause" ) ;    
+} // main()
+
+void GetToken() {
+  int type = 0 ;
+  bool codeQuit = false ; 
+  memset( gtemp, '\0', sizeof(gtemp) );  
+  
+  while ( ( gch == ' ' || gch == '\n' || gch == '\t' || gch == '\0' ) && codeQuit != true ) {
+    if ( scanf( "%c", &gch ) == EOF ) 
+      codeQuit = true ;     
+  } // while()
+  
+  type = WhatType() ;
+  
+  if ( type == 1 )
+    Ident() ; 
+  else if ( type == 2 )
+    Number() ;
+  else if ( type == 3 )
+    Symbol() ;     
+} // GetToken()
+
+bool CheckToken( char ch ) {
+  if ( ch >= 65 && ch <= 90 ) 
+    return true ;
+  else if ( ch >= 97 && ch <= 122 ) 
+    return true ; 
+  else if ( ch >= 48 && ch <= 57 ) 
+    return true ;
+  else if ( ch == '_' ) 
+    return true ; 
+  else 
+    return false ;      
+} // CheckToken() 
+
+bool IdentToken( char ch ) {
+  if ( ch >= 65 && ch <= 90 ) 
+    return true ;
+  else if ( ch >= 97 && ch <= 122 ) 
+    return true ; 
+  else if ( ch == '_' ) 
+    return true ; 
+  else 
+    return false ;      
+} // IdentToken() 
+
+
+bool CheckNumToken( char ch ) {
+  if ( ch >= 48 && ch <= 57 ) 
+    return true ;   
+  else if ( ch >= 65 && ch <= 90 ) 
+    return false ;
+  else if ( ch >= 97 && ch <= 122 ) 
+    return false ; 
+  else 
+    return false ;      
+} // CheckNumToken()
+
+int WhatType() {
+  if ( gch >= 65 && gch <= 90 ) 
+    return 1 ;
+  else if ( gch >= 97 && gch <= 122 ) 
+    return 1 ;
+  else if ( gch >= 48 && gch <= 57 )
+    return 2 ;
+  else if ( gch == '_' )
+    return 1 ;  
+  else if ( gch == '\n' || gch == ' ' || gch == '\t' || gch == '\0' )
+    return 4 ;
+  else 
+    return 3 ;                
+} // WhatType()
+
+void Ident() {
+  bool codeQuit = false ; 
+  
+  while ( CheckToken( gch ) != false && codeQuit != true ) {
+    gtemp[strlen( gtemp )] = gch ;
+    if ( scanf( "%c", &gch ) == EOF ) 
+      codeQuit = true ;       
+  } // while()
+      
+} // Ident()
+
+void Number() {
+  bool codeQuit = false ; 
+  
+  while ( CheckNumToken( gch ) != false && codeQuit != true ) {
+    gtemp[strlen( gtemp )] = gch ;
+    if ( scanf( "%c", &gch ) == EOF ) 
+      codeQuit = true ;       
+  } // while()
+      
+} // Number()
+
+
+void Symbol() {
+  if ( gch == ':' ) {     
+    gtemp[strlen( gtemp )] = gch ;
+    scanf( "%c", &gch ) ;
+    if ( gch == '=' ) {
+      gtemp[strlen( gtemp )] = gch ;
+      gch = '\0' ;
+    } // if()       
+  } // if()
+  
+  else if ( gch == '<' ) {
+    gtemp[strlen( gtemp )] = gch ;       
+    scanf( "%c", &gch ) ;
+    if ( gch == '=' ) {
+      gtemp[strlen( gtemp )] = gch ;
+      gch = '\0' ;
+    } // if() 
+    
+    else if ( gch == '>' ) {
+      gtemp[strlen( gtemp )] = gch ;
+      gch = '\0' ;
+    } // else if()      
+  } // else if()
+  
+  else if ( gch == '>' ) {
+    gtemp[strlen( gtemp )] = gch ;    
+    scanf( "%c", &gch ) ;
+    if ( gch == '=' ) {
+      gtemp[strlen( gtemp )] = gch ;
+      gch = '\0' ;
+    } // if()       
+  } // else if()  
+     
+  else if ( gch == '/' ) {
+    gtemp[strlen( gtemp )] = gch ;
+    scanf( "%c", &gch ) ;  
+    if ( gch == '/' ) {
+      memset( gtemp, '\0', sizeof(gtemp) ); 
+      while ( gch != '\n' )
+        scanf( "%c", &gch ) ;
+      GetToken() ;             
+    } // if()           
+  } // else if()
+  
+  else {
+    gtemp[strlen( gtemp )] = gch ;       
+    gch = '\0' ;   
+  } // else()
+        
+} // Symbol()
+
+
+// ----------------------------------------------------------------------------------------
+
+bool FindIdent( int &answer, Str100 &temp2, int &where ) { 
+  int i = 0 ; 
+  memset( temp2, '\0', sizeof(temp2) );
+  strcpy( temp2, gtemp ) ;
+   
+  while ( i < strlen( temp2 ) ) {
+    if ( CheckToken( temp2[i] ) == false )
+      return false ;    
+    i++ ;
+  } // while()  
+      
+  for ( int i = 0 ; i < gTableTotal ; i++ ) {
+    if ( strcmp( temp2, gtable[i].string ) == 0 ) {  
+      answer = gtable[i].value ;
+      where = i ;
+      return true ;  
+    } // if()        
+  } // for()        
+  
+  return false ;
+    
+} // FindIdent()
+
+int Num( Str100 str ) {
+  int value ;
+  sscanf( str, "%d", &value ) ;
+  return value ;        
+} // Num()
+
+bool Factor( int &answer ) {
+  int tempanswer = 0 ;
+  int i = 0, where = 0 ;
+  Str100 temp ;
+  memset( temp, '\0', sizeof(temp) );
+  
+  if ( strcmp( gtemp, "-" ) == 0 ) {
+    gN_GT = true ;      
+    GetToken() ;      
+    if ( strcmp( gtemp, "(" ) == 0 ) {
+      gN_GT = true ;   
+      GetToken() ;   
+      if ( ArithExp( answer ) == true ) {
+        if ( gN_GT == true ) GetToken() ;   
+        if ( strcmp( gtemp, ")" ) == 0 ) {
+          gN_GT = true ;        
+          answer = answer * -1 ;   
+          return true ;
+        } // if()  
+      } // if()
+    
+      else 
+        return false  ;   
+    } // if()
+    
+    else if ( gtemp[0] >= 48 && gtemp[0] <= 57 ) {      
+      while ( i < strlen( gtemp ) ) {
+        if ( CheckNumToken( gtemp[i] ) == false ) 
+          return false ;
+        i++ ;  
+      } // while
+    
+      answer = Num( gtemp ) * -1 ;
+      return true ;     
+    } // else if()
+       
+  } // if()
+  
+  else if ( strcmp( gtemp, "(" ) == 0 ) { // 括號的狀況
+    gN_GT = true ;
+    GetToken() ;    
+    if ( ArithExp( answer ) == true ) {
+      if ( gN_GT == true ) GetToken() ;  
+      if ( strcmp( gtemp, ")" ) == 0 ) {    
+        gN_GT = true ; 
+        return true ;
+      } // if() 
+        
+      else 
+        return false ; 
+    } // if()
+    
+    else 
+      return false  ;   
+  } // else if()
+  
+  else if ( gtemp[0] >= 48 && gtemp[0] <= 57 ) { // 數字的狀況 
+    while ( i < strlen( gtemp ) ) {
+      if ( CheckNumToken( gtemp[i] ) == false ) 
+        return false ;
+      i++ ;  
+    } // while
+    
+    answer = Num( gtemp ) ;
+    return true ;             
+  }  // else if() 
+  
+  
+  else if ( IdentToken( gtemp[0] ) ) {   
+    if ( FindIdent( answer, temp, where ) == true ) {
+      gidenttype = 0 ;    
+      return true ;
+    } // if()  
+    else {     
+      gidenttype = 1 ;   
+      return false ; 
+    } // else         
+  } // else if()
+  
+  
+  else
+    return false ;          
+} // Factor() 
+
+
+bool Term( int &answer ) {  
+  int tempanswer = 0 ;
+  
+  if ( Factor( answer ) == true ) {
+  
+    tempanswer = answer ;
+    if ( gN_GT == true ) GetToken() ;
+    while ( strcmp( gtemp, "*" ) == 0 || strcmp( gtemp, "/" ) == 0 ) {
+      if ( strcmp( gtemp, "*" ) == 0 ) {
+        gN_GT = true ;       
+        GetToken() ;  
+        if ( Factor( answer ) == true ) {           
+          tempanswer = tempanswer * answer ;
+        } // if()
+      
+        else 
+          return false ; 
+      } // if()
+      
+      else if ( strcmp( gtemp, "/" ) == 0 ) {
+        gN_GT = true ;   
+        GetToken() ;                 
+        if ( Factor( answer ) == true ) {
+          tempanswer = tempanswer / answer ;
+        } // if()
+      
+        else 
+          return false ;                    
+      } // else if() 
+      
+      if ( gN_GT == true ) GetToken() ;                
+    } // while()
+    
+    if ( IdentToken( gtemp[0] ) ) gidenttype = 2 ; 
+    gN_GT = false ;   
+    answer = tempanswer ;
+    return true ;
+    
+  } // if()
+  
+  else 
+    return false ;  
+  
+} // Term()
+
+
+bool ArithExp( int &answer ) {  
+  int tempanswer = 0 ;
+  
+  if ( Term( answer ) == true ) {
+    tempanswer = answer ;
+    if ( gN_GT == true ) GetToken() ; 
+    while ( strcmp( gtemp, "+" ) == 0 || strcmp( gtemp, "-" ) == 0 ) {
+      if ( strcmp( gtemp, "+" ) == 0 ) {
+        gN_GT = true ;          
+        GetToken() ;       
+        if ( Term( answer ) == true ) {
+          tempanswer = tempanswer + answer ;
+        } // if()
+      
+        else 
+          return false ; 
+      } // if()
+      
+      else if ( strcmp( gtemp, "-" ) == 0 ) {
+        gN_GT = true ;   
+        GetToken() ;                   
+        if ( Term( answer ) == true ) {
+          tempanswer = tempanswer - answer ;
+        } // if()
+      
+        else 
+          return false ;                    
+      } // else if()
+      
+      if ( gN_GT == true ) GetToken() ;                  
+    } // while()
+    
+    if ( IdentToken( gtemp[0] ) ) gidenttype = 2 ; 
+    gN_GT = false ;
+    answer = tempanswer ;
+    return true ;
+    
+  } // if()
+  
+  else 
+    return false ;  
+  
+} // ArithExp() 
+
+// ----------------------------------------------------------------
+
+bool BooleanOperator( int &type ) {
+  if ( strcmp( gtemp, "=" ) == 0 ) {
+    type = 1 ;
+    return true ;      
+  } // if()
+  
+  else if ( strcmp( gtemp, "<" ) == 0 ) {
+    type = 2 ;   
+    return true ;         
+  } // else if()
+    
+  else if ( strcmp( gtemp, ">" ) == 0 ) {
+    type = 3 ;   
+    return true ;         
+  } // else if()
+
+  else if ( strcmp( gtemp, "<=" ) == 0 ) {
+    type = 4 ;   
+    return true ;         
+  } // else if()
+  
+  else if ( strcmp( gtemp, ">=" ) == 0 ) {
+    type = 5 ;   
+    return true ;         
+  } // else if()  
+  
+  else if ( strcmp( gtemp, "<>" ) == 0 ) {
+    type = 6 ;   
+    return true ;         
+  } // else if() 
+  
+  else 
+    return false ;               
+} // BooleanOperator()
+
+bool NOT_ID_StartFactor( int &answer ) {
+  int tempanswer = 0 ;
+  int i = 0 ;
+  if ( strcmp( gtemp, "-" ) == 0 ) {
+    gN_GT = true ;     
+    GetToken() ;      
+    if ( strcmp( gtemp, "(" ) == 0 ) {
+      gN_GT = true ;   
+      GetToken() ;   
+      if ( ArithExp( answer ) == true ) {
+        if ( gN_GT == true ) GetToken() ;   
+        if ( strcmp( gtemp, ")" ) == 0 ) {
+          gN_GT = true ;    
+          answer = answer * -1 ;    
+          return true ;
+        } // if()  
+      } // if()
+    
+      else 
+        return false  ;   
+    } // if()
+    
+    else if ( gtemp[0] >= 48 && gtemp[0] <= 57 ) {      
+      while ( i < strlen( gtemp ) ) {
+        if ( CheckNumToken( gtemp[i] ) == false ) 
+          return false ;
+        i++ ;  
+      } // while
+    
+      answer = Num( gtemp ) * -1 ;
+      return true ;     
+    } // else if()
+       
+  } // if()
+  
+  else if ( strcmp( gtemp, "(" ) == 0 ) { // 括號的狀況 
+    gN_GT = true ;
+    GetToken() ;    
+    if ( ArithExp( answer ) == true ) {
+      if ( gN_GT == true ) GetToken() ;  
+      if ( strcmp( gtemp, ")" ) == 0 ) {    
+        gN_GT = true ;  
+        return true ;
+      } // if() 
+      
+      else 
+        return false ; 
+    } // if()
+    
+    else 
+      return false  ;   
+  } // else if()
+  
+  else if ( gtemp[0] >= 48 && gtemp[0] <= 57 ) { // 數字的狀況 
+    while ( i < strlen( gtemp ) ) {
+      if ( CheckNumToken( gtemp[i] ) == false ) 
+        return false ;
+      i++ ;  
+    } // while
+    
+    answer = Num( gtemp ) ;
+    return true ;             
+  }  // else if()  
+    
+  else 
+    return false  ; 
+  
+} // NOT_ID_StartFactor()
+
+bool NOT_ID_StartTerm( int &answer ) {   
+
+  int tempanswer = 0 ;
+  
+  if ( NOT_ID_StartFactor( answer ) == true ) {
+  
+    tempanswer = answer ;
+    if ( gN_GT == true ) GetToken() ; 
+    while ( strcmp( gtemp, "*" ) == 0 || strcmp( gtemp, "/" ) == 0  ) {
+      if ( strcmp( gtemp, "*" ) == 0 ) {
+        gN_GT = true ;       
+        GetToken() ;  
+        if ( Factor( answer ) == true ) {           
+          tempanswer = tempanswer * answer ;
+        } // if()
+      
+        else 
+          return false ; 
+      } // if()
+      
+      else if ( strcmp( gtemp, "/" ) == 0 ) {
+        gN_GT = true ;            
+        GetToken() ;                 
+        if ( Factor( answer ) == true ) {
+          tempanswer = tempanswer / answer ;
+        } // if()
+      
+        else 
+          return false ;                    
+      } // else if() 
+      
+      if ( gN_GT == true ) GetToken() ; 
+    } // while()
+    
+    if ( IdentToken( gtemp[0] ) ) gidenttype = 2 ; 
+    gN_GT = false ;        
+    answer = tempanswer ;
+    return true ;
+    
+  } // if()
+  
+  else 
+    return false ; 
+   
+     
+} // NOT_ID_StartTerm() 
+
+bool NOT_ID_StartArithExp( int &answer ) {
+  int tempanswer ;
+  if ( NOT_ID_StartTerm( answer ) == true ) {
+    if ( gN_GT == true ) GetToken() ;    
+    tempanswer = answer ; 
+    while ( strcmp( gtemp, "+" ) == 0 || strcmp( gtemp, "-" ) == 0 ) {
+      if ( strcmp( gtemp, "+" ) == 0 ) {
+        gN_GT = true ;          
+        GetToken() ;       
+        if ( Term( answer ) == true ) {
+          tempanswer = tempanswer + answer ;
+        } // if()
+      
+        else 
+          return false ; 
+      } // if()
+      
+      else if ( strcmp( gtemp, "-" ) == 0 ) {
+        gN_GT = true ;           
+        GetToken() ;                   
+        if ( Term( answer ) == true ) {
+          tempanswer = tempanswer - answer ;
+        } // if()
+      
+        else 
+          return false ;                    
+      } // else if()
+      
+      if ( gN_GT == true ) GetToken() ;                       
+    } // while()
+    
+    if ( IdentToken( gtemp[0] ) ) gidenttype = 2 ; 
+    gN_GT = false ;
+    answer = tempanswer ;
+    return true ;
+    
+  } // if()
+  
+  else 
+    return false ;      
+         
+} // NOT_ID_StartArithExp() 
+  
+bool NOT_ID_StartArithExpOrBexp( int &answer ) {
+  int temptype = 0 ;
+  int tempanswer = 0 ;
+  
+  if ( NOT_ID_StartArithExp( answer ) == true ) {
+    tempanswer = answer ;
+    if ( gN_GT == true ) GetToken() ;
+      
+    if ( BooleanOperator( temptype ) == true ) {
+      gN_GT = true ;          
+      GetToken() ;
+      if ( ArithExp( answer ) == true ) {
+               
+        if ( temptype == 1 ) {                           
+          if ( tempanswer == answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;
+                    
+        } // if()
+        
+        else if ( temptype == 2 ) {
+          if ( tempanswer < answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;             
+        } // else if()
+        
+        else if ( temptype == 3 ) {
+             
+          if ( tempanswer > answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;             
+        } // else if()
+        
+        else if ( temptype == 4 ) {
+          if ( tempanswer <= answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;             
+        } // else if()
+        
+        else if ( temptype == 5 ) {
+          if ( tempanswer >= answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;             
+        } // else if()
+        
+        else if ( temptype == 6 ) {
+          if ( tempanswer != answer ) 
+            answer = -666 ;
+          else 
+            answer = -888 ;             
+        } // else if()
+
+        return true ;                 
+      } // if()
+      
+      else
+        return false ;
+    } // if()
+        
+    else {
+      gN_GT = false ;             
+      return true ;
+    } // else
+  } // if()
+  
+  else 
+    return false ;
+     
+} // NOT_ID_StartArithExpOrBexp()
+
+// ----------------------------------------------------------------
+
+
+bool IDlessArithExpOrBexp( int &answer ) {
+  int tempanswer = 0 ;
+  int temptype = 0 ;
+
+
+  tempanswer = answer ; 
+
+  while ( strcmp( gtemp, "+" ) == 0 || strcmp( gtemp, "-" ) == 0 || 
+          strcmp( gtemp, "*" ) == 0 || strcmp( gtemp, "/" ) == 0 ) {  
+    if ( strcmp( gtemp, "+" ) == 0 ) {
+      gN_GT = true ;          
+      GetToken() ;        
+      if ( Term( answer ) == true ) {
+        tempanswer = tempanswer + answer ;   
+      } // if()
+      
+      else {  
+        return false ;
+      } // else         
+    } // if() 
+    
+    else if ( strcmp( gtemp, "-" ) == 0 ) {         
+      gN_GT = true ;          
+      GetToken() ;      
+      if ( Term( answer ) == true ) {
+        tempanswer = tempanswer - answer ;   
+      } // if()
+       
+      else
+        return false ;   
+    } // else if()      
+ 
+    else if ( strcmp( gtemp, "*" ) == 0 ) {  
+      gN_GT = true ;          
+      GetToken() ;       
+      if ( Factor( answer ) == true ) {
+        tempanswer = tempanswer * answer ;   
+      } // if()
+      
+      else
+        return false ;       
+    } // if() 
+    
+    else if ( strcmp( gtemp, "/" ) == 0 ) {         
+      gN_GT = true ;          
+      GetToken() ;      
+      if ( Factor( answer ) == true ) {
+        tempanswer = tempanswer / answer ;   
+      } // if()
+       
+      else
+        return false ;   
+    } // else if()
+    
+    if ( gN_GT == true ) GetToken() ;   
+  } // while()
+  
+  if ( IdentToken( gtemp[0] ) ) gidenttype = 2 ; 
+   
+  if ( BooleanOperator( temptype ) == true ) {
+    gN_GT = true ;          
+    GetToken() ;    
+    if ( ArithExp( answer ) == true ) {
+
+          
+      if ( temptype == 1 ) {
+        if ( tempanswer == answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;
+                    
+      } // if()
+        
+      else if ( temptype == 2 ) {
+        if ( tempanswer < answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;             
+      } // else if()
+        
+      else if ( temptype == 3 ) {
+             
+        if ( tempanswer > answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;             
+      } // else if()
+        
+      else if ( temptype == 4 ) {
+        if ( tempanswer <= answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;             
+      } // else if()
+        
+      else if ( temptype == 5 ) {
+        if ( tempanswer >= answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;             
+      } // else if()
+        
+      else if ( temptype == 6 ) {
+        if ( tempanswer != answer ) 
+          answer = -666 ;
+        else 
+          answer = -888 ;             
+      } // else if()
+
+      return true ;                 
+    } // if()
+      
+    else
+      return false ;
+  } // if()
+
+  
+  else {
+    gN_GT = false ;   
+    answer = tempanswer ;    
+    return true ;
+  } // else   
+  
+} // IDlessArithExpOrBexp()    
+ 
+bool Command( int &answer ) {
+  int tempanswer ;
+  int where = 0 ;
+  Str100 temp ;
+  memset( temp, '\0', sizeof(temp) ); 
+  
+  if ( strcmp( gtemp, ";" ) == 0 ) {
+    answer = 9527 ;
+    return true ;     
+  } // if()
+     
+  else if ( IdentToken( gtemp[0] ) ) {   
+    if ( FindIdent( answer, temp, where ) == false ) {
+      gidenttype = 1 ;           
+      GetToken() ;    
+      if ( strcmp( gtemp, ":=" ) == 0 ) {
+        gN_GT = true ;            
+        GetToken() ;  
+        if ( ArithExp( answer ) == true ) {
+          gtable[gTableTotal].value = answer ;
+          strcpy( gtable[gTableTotal].string, temp ) ;
+          gTableTotal++ ;
+          return true ;
+        } // if()
+        
+        else 
+          return false ;   
+      } // if() 
+      
+      else {
+        gidenttype = 2 ;
+        // strcpy( gtemp, temp ) ;   
+        return false ;
+      } // else                     
+    } // if()        
+    
+    else {
+      gidenttype = 0 ;   
+      GetToken() ;
+      if ( strcmp( gtemp, ":=" ) == 0 ) {
+        gN_GT = true ;            
+        GetToken() ;  
+        if ( ArithExp( answer ) == true ) {
+          if ( gN_GT == true ) GetToken() ;
+          if ( strcmp( gtemp, ";" ) != 0 ) return false ;   
+          gtable[where].value = answer ;
+          return true ;
+        } // if()
+        
+        else 
+          return false ;   
+      } // if() 
+      
+      else if ( IDlessArithExpOrBexp( answer ) == true ) { 
+        if ( gN_GT == true ) GetToken() ;
+        if ( strcmp( gtemp, ";" ) != 0 ) return false ;   
+        return true ;
+      } // else if()  
+      else 
+        return false ;         
+    } // else ()
+    
+    
+  } // else if()
+  
+
+  
+  else {
+    if ( NOT_ID_StartArithExpOrBexp( answer ) == true ) {
+      if ( gN_GT == true ) GetToken() ;
+      if ( strcmp( gtemp, ";" ) != 0 ) return false ;   
+      return true ;
+    } // if()  
+    else 
+      return false ;     
+  } // else if()
+  
+
+  return false ;
+} // Command()
